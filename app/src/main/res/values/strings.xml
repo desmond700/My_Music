@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name" type="id">My Music</string>
+    <string name="title_activity_home_screen">HomeScreen</string>
+    <string name="title_activity_my_music_app_bar">MyMusicAppBar</string>
+    <string name="title_activity_player_screen">PlayerScreen</string>
+    <string name="title_activity_search">Search</string>
+</resources>
