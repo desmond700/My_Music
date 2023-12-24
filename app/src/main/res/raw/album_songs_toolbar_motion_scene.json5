@@ -1,0 +1,146 @@
+{
+  ConstraintSets: {
+    start: {
+      header_container: {
+        height: 120,
+        width: 'spread',
+        top: ['parent', 'top', 0],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0]
+      },
+      music_art: {
+        height: 100,
+        width: 100,
+        top: ['header_container', 'top', 10],
+        start: ['header_container', 'start', 10],
+      },
+      album_info_normal: {
+        top: ['music_art', 'bottom', 0],
+        start: ['music_art', 'start', 0],
+        alpha: 0,
+      },
+      album_info_min: {
+        top: ['music_art', 'top', 0],
+        start: ['music_art', 'end', 10],
+        //        end: ['music_art', 'end', 10],
+        alpha: 1,
+      },
+      play_button: {
+        height: 40,
+        width: 110,
+        //        top: ['music_art', 'bottom', 0],
+        bottom: ['header_container', 'bottom', 10],
+        start: ['music_art', 'end', 10],
+      },
+      shuffle_button: {
+        height: 40,
+        width: 110,
+        //        top: ['music_art', 'bottom', 0],
+        bottom: ['music_art', 'bottom', 0],
+        start: ['play_button', 'end', 20],
+        centerVertically: 'play_button',
+      },
+      content_list_container: {
+        height: 'spread',
+        width: 'spread',
+        top: ['header_container', 'bottom', 0],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0],
+        bottom: ['parent', 'bottom', 0]
+      },
+      divider: {
+        height: 1,
+        width: 'spread',
+        start: ['header_container', 'start', 0],
+        end: ['header_container', 'end', 0],
+        bottom: ['header_container', 'bottom', 0],
+      }
+    },
+    end: {
+      header_container: {
+        height: 410,
+        width: 'spread',
+        top: ['parent', 'top', 0],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0],
+      },
+      music_art: {
+        height: 'wrap',
+        width: 'wrap',
+        top: ['header_container', 'top', 20],
+        start: ['header_container', 'start', 30],
+        end: ['header_container', 'end', 30],
+      },
+      album_info_normal: {
+        top: ['music_art', 'bottom', 10],
+        centerHorizontally: 'music_art',
+        alpha: 1,
+      },
+      album_info_min: {
+        top: ['music_art', 'top', 0],
+        start: ['music_art', 'end', 10],
+//        end: ['music_art', 'end', 10],
+        alpha: 0,
+      },
+      play_button: {
+        height: 45,
+        width: 120,
+//        top: ['album_info_normal', 'bottom', 0],
+        start: ['header_container', 'start', 50],
+        bottom: ['header_container', 'bottom', 10],
+      },
+      shuffle_button: {
+        height: 45,
+        width: 120,
+        end: ['header_container', 'end', 50],
+        centerVertically: 'play_button',
+      },
+      content_list_container: {
+        height: 'spread',
+        width: 'spread',
+        top: ['header_container', 'bottom', 0],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0],
+        bottom: ['parent', 'bottom', 0],
+      },
+      divider: {
+        height: 1,
+        width: 'spread',
+        start: ['header_container', 'start', 0],
+        end: ['header_container', 'end', 0],
+        bottom: ['header_container', 'bottom', 0],
+      }
+    }
+  },
+  Transitions: {
+    default: {
+      from: 'start',
+      to: 'end',
+//      pathMotionArc: 'startVertical',
+      KeyFrames: {
+        KeyAttributes: [
+          {
+            target: ['album_info_normal'],
+            frames: [80, 100],
+            alpha: [0, 1],
+          },
+          {
+            target: ['album_info_min'],
+            frames: [40, 70],
+            alpha: [1, 0]
+          },
+          {
+            target: ['play_button'],
+            frames: [30, 100],
+            translationX: [74, 0],
+          },
+          {
+            target: ['shuffle_button'],
+            frames: [30, 100],
+            translationX: [45, 0],
+          }
+        ]
+      }
+    }
+  }
+}

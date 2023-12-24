@@ -1,0 +1,289 @@
+{
+  ConstraintSets: {
+    start: {
+      Home_screen: {
+        height: 'spread',
+        width: 'spread',
+        top: ['parent', 'top', 0],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0],
+        bottom: ['parent', 'bottom', 0]
+      },
+      bg_container: {
+        height: 70,
+        width: 'spread',
+        start: ['parent', 'start'],
+        end: ['parent', 'end'],
+        bottom: ['parent', 'bottom']
+      },
+      music_art: {
+        height: 60,
+        width: 60,
+        start: ['bg_container', 'start', 10],
+        top: ['bg_container', 'top', 25],
+//        bottom: ['bg_container', 'bottom', 10],
+      },
+      drag_indicator: {
+        height: 6,
+        width: 15,
+        top: ['bg_container', 'top', 10],
+        centerHorizontally: 'bg_container',
+        alpha: 0,
+      },
+      music_title_normal: {
+        width: 'spread',
+        top: ['music_art', 'bottom', 70],
+        start: ['bg_container', 'start', 40],
+        end: ['player_menu_button', 'start', 10],
+        alpha: 0
+      },
+      music_title_min: {
+        width: 'spread',
+        centerVertically: 'music_art',
+        start: ['music_art', 'end', 10],
+        end: ['music_previous_button', 'start', 10],
+        alpha: 1,
+      },
+      seekbar: {
+        height: 'spread',
+        width: 'spread',
+        bottom: ['bg_container', 'bottom', 3],
+        start: ['bg_container', 'start', -5],
+        end: ['bg_container', 'end', -5],
+        alpha: 0,
+      },
+      volume_seekbar: {
+        height: 'spread',
+        width: 'spread',
+        top: ['music_play_button', 'bottom', 20],
+        start: ['bg_container', 'start', 20],
+        end: ['bg_container', 'end', 20],
+        alpha: 0,
+      },
+      volume_low_icon: {
+        height: '24',
+        width: '24',
+        start: ['bg_container', 'start', 20],
+        centerVertically: 'volume_seekbar',
+        alpha: 0
+      },
+      volume_high_icon: {
+        height: '24',
+        width: '24',
+        end: ['bg_container', 'end', 20],
+        centerVertically: 'volume_seekbar',
+        alpha: 0
+      },
+      track_playback_position_text: {
+        top: ['seekbar', 'bottom', -5],
+        start: ['seekbar', 'start', 0],
+        alpha: 0,
+      },
+      track_duration_text: {
+        top: ['seekbar', 'bottom', -5],
+        end: ['seekbar', 'end', 0],
+        alpha: 0
+      },
+      player_menu_button: {
+        centerVertically: 'music_title_normal',
+        end: ['bg_container', 'end', 20],
+        alpha: 0,
+      },
+      music_previous_button: {
+        height: 40,
+        width: 40,
+        end: ['music_play_button', 'start', 10],
+        centerVertically: 'music_play_button',
+      },
+      music_play_button: {
+        height: 40,
+        width: 40,
+        end: ['music_next_button', 'start', 10],
+        centerVertically: 'bg_container',
+      },
+      music_next_button: {
+        height: 40,
+        width: 40,
+        end: ['bg_container', 'end', 10],
+        centerVertically: 'music_play_button',
+      },
+      music_shuffle_button: {
+        height: 0,
+        width: 0,
+//        start: ['bg_container', 'start', 0],
+        end: ['music_previous_button', 'start', 0],
+        centerVertically: 'music_previous_button',
+        alpha: 0,
+      },
+      music_replay_button: {
+        height: 0,
+        width: 0,
+        start: ['music_next_button', 'end', 0],
+        end: ['bg_container', 'end', 0],
+        centerVertically: 'music_next_button',
+        alpha: 0,
+      }
+    },
+    end: {
+      Home_screen: {
+        height: 'spread',
+        width: 'spread',
+        top: ['parent', 'top', 0],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0],
+        bottom: ['parent', 'bottom', 0]
+      },
+      bg_container: {
+        height: 'spread',
+        width: 'spread',
+        start: ['parent', 'start'],
+        end: ['parent', 'end'],
+        top: ['parent', 'top'],
+        bottom: ['parent', 'bottom']
+      },
+      drag_indicator: {
+        height: 8,
+        width: 45,
+        top: ['bg_container', 'top', 20],
+        centerHorizontally: 'bg_container',
+        alpha: 1,
+      },
+      music_art: {
+        height: 248,
+        width: 248,
+        start: ['bg_container', 'start'],
+        end: ['bg_container', 'end'],
+        top: ['bg_container', 'top', 95]
+      },
+      music_title_normal: {
+        width: 'spread',
+        top: ['music_art', 'bottom', 50],
+        start: ['bg_container', 'start', 20],
+        end: ['player_menu_button', 'start', 10],
+        alpha: 1,
+      },
+      music_title_min: {
+        centerVertically: 'music_art',
+        start: ['music_art', 'end', 10],
+        alpha: 0,
+      },
+      seekbar: {
+        width: 'spread',
+        top: ['music_title_normal', 'bottom', 10],
+        start: ['bg_container', 'start', 20],
+        end: ['bg_container', 'end', 20],
+        alpha: 1,
+      },
+      volume_seekbar: {
+        height: 'spread',
+        width: 'spread',
+        top: ['music_play_button', 'bottom', 70],
+        start: ['volume_low_icon', 'end', 10],
+        end: ['volume_high_icon', 'start', 10],
+        alpha: 1,
+      },
+      volume_low_icon: {
+        height: 24,
+        width: 24,
+        start: ['bg_container', 'start', 25],
+        centerVertically: 'volume_seekbar',
+        alpha: 1
+      },
+      volume_high_icon: {
+        height: 24,
+        width: 24,
+        end: ['bg_container', 'end', 25],
+        centerVertically: 'volume_seekbar',
+        alpha: 1
+      },
+      track_playback_position_text: {
+        top: ['seekbar', 'bottom', -5],
+        start: ['seekbar', 'start', 8],
+        alpha: 1
+      },
+      track_duration_text: {
+        top: ['seekbar', 'bottom', -5],
+        end: ['seekbar', 'end', 8],
+        alpha: 1
+      },
+      player_menu_button: {
+        centerVertically: 'music_title_normal',
+        end: ['bg_container', 'end', 25],
+        alpha: 1,
+      },
+      music_previous_button: {
+        height: 50,
+        width: 50,
+        end: ['music_play_button', 'start', 20],
+        centerVertically: 'music_play_button',
+      },
+      music_play_button: {
+        height: 50,
+        width: 50,
+        top: ['seekbar', 'bottom', 50],
+        centerHorizontally: 'seekbar',
+      },
+      music_next_button: {
+        height: 50,
+        width: 50,
+        start: ['music_play_button', 'end', 20],
+        centerVertically: 'music_play_button',
+      },
+      music_shuffle_button: {
+        height: 50,
+        width: 50,
+        start: ['bg_container', 'start', 15],
+//        end: ['music_previous_button', 'start', 10],
+        centerVertically: 'music_previous_button',
+        alpha: 1,
+      },
+      music_replay_button: {
+        height: 50,
+        width: 50,
+//        start: ['music_next_button', 'end', 20],
+        end: ['bg_container', 'end', 15],
+        centerVertically: 'music_next_button',
+        alpha: 1,
+      }
+    }
+  },
+  Transitions: {
+    default: {
+      from: 'start',
+      to: 'end',
+      duration: 100,
+      pathMotionArc: 'none',
+//      onSwipe: {
+//        anchor: 'bg_container',
+//        maxVelocity: 4.2,
+//        maxAccel: 3,
+//        direction: 'up',
+//        side: 'middle',
+//      },
+      KeyFrames: {
+        KeyAttributes: [
+          {
+            target: ['music_title_normal', 'player_menu_button', 'seekbar', 'volume_seekbar', 'drag_indicator'],
+            frames: [70, 100],
+            alpha: [0.0, 1.0]
+          },
+          {
+            target: ['music_title_min'],
+            frames: [40, 70],
+            alpha: [1.0, 0.0]
+          },
+//          {
+//            target: ['seekbar'],
+//            frames: [0, 8, 90, 100],
+//            alpha: [1.0, 0.0, 0.0, 1.0],
+//          },
+          {
+            target: ['track_playback_position_text', 'track_duration_text'],
+            frames: [90, 100],
+            alpha: [0.0, 1.0]
+          }
+        ]
+      }
+    }
+  }
+}
