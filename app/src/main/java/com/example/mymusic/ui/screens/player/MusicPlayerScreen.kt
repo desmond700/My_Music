@@ -16,16 +16,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.material.Scaffold
-import androidx.compose.material.SnackbarHost
-import androidx.compose.material.SnackbarHostState
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalConfiguration
@@ -38,10 +42,13 @@ import androidx.constraintlayout.compose.MotionLayout
 import androidx.constraintlayout.compose.MotionScene
 import androidx.constraintlayout.compose.layoutId
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.palette.graphics.Palette
 import com.example.mymusic.R
 import com.example.mymusic.ui.viewmodels.MusicPlayerViewModel
 import com.example.mymusic.ui.viewmodels.MusicPlayerViewModelState
 import com.example.mymusic.ui.viewmodels.UIEvents
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 enum class DragAnchors {
@@ -49,8 +56,14 @@ enum class DragAnchors {
     End
 }
 
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
-@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+private fun getBackgroundGradient(palette: Palette?): Brush {
+    val startColor = palette?.dominantSwatch?.rgb?.let { Color(it) } ?: Color.Magenta
+    val endColor = palette?.darkMutedSwatch?.rgb?.let { Color(it) } ?: Color.Magenta
+
+    return Brush.linearGradient(colors = listOf(startColor, endColor))
+}
+
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun PlayerScreen(
     modifier: Modifier = Modifier,
@@ -75,6 +88,7 @@ fun PlayerScreen(
     }
 }
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun MusicPlayerScreenContent(
@@ -83,7 +97,8 @@ fun MusicPlayerScreenContent(
     snackbarHostState: SnackbarHostState,
     content: @Composable (modifier: Modifier) -> Unit
 ) {
-    val uiState by viewModel.uiState
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarMessage by viewModel.snackbarMessage.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     val context = LocalContext.current
@@ -108,7 +123,22 @@ fun MusicPlayerScreenContent(
         }
     }
 
-    val swipeProgress = state.requireOffset() / screenHeight;
+    LaunchedEffect(snackbarMessage) {
+        scope.launch {
+            if (snackbarMessage != null) {
+                snackbarHostState.showSnackbar(
+                    message = snackbarMessage!!
+                )
+            }
+        }
+    }
+
+
+
+    Log.d("MusicPlayerScreenContent", "state.currentValue ${state.currentValue}")
+
+
+    val swipeProgress = state.requireOffset() / screenHeight
 
     val motionScene = remember {
         context.resources
@@ -120,11 +150,35 @@ fun MusicPlayerScreenContent(
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
-    uiState.currentSong?.let {
-       scope.launch {
-           Log.d("MusicPlayerScreen", "animateTo DragAnchors.End state ${state.requireOffset()}")
-           state.animateTo(DragAnchors.End)
-       }
+//    uiState.currentSong?.let {
+//       scope.launch {
+//           Log.d("MusicPlayerScreen", "animateTo DragAnchors.End state ${state.requireOffset()}")
+//           state.animateTo(DragAnchors.End)
+//       }
+//    }
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            viewModel.snackbarMessage.collectLatest { message ->
+                Log.d("PlayerScreen", "snackbarMessage collectLatest")
+
+                if (message != null) {
+                    snackbarHostState.showSnackbar(
+                        message = message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
+        }
+
+    }
+
+    LaunchedEffect(uiState.currentSong) {
+        Log.d("MusicPlayerScreenContent", "state.currentValue ${state.currentValue}")
+        Log.d("MusicPlayerScreenContent", "currentSong ${uiState.currentSong}")
+        if (uiState.currentSong != null && state.currentValue == DragAnchors.Start) {
+            state.animateTo(DragAnchors.End)
+        }
     }
 
     Column(modifier = modifier
@@ -153,12 +207,21 @@ fun MusicPlayerScreenContent(
             motionScene = MotionScene(content = motionScene),
             progress = swipeProgress,
         ) {
-            content(Modifier.layoutId("Home_screen"))
+            val paddingProperty = customProperties(id = "Home_screen")
+
+            content(Modifier
+                .padding(bottom = when(uiState.currentSong) {
+                        null -> 0.dp
+                        else -> paddingProperty.float("padding").dp
+                    }
+                )
+                .layoutId("Home_screen")
+            )
 
             uiState.currentSong?.let {
                 Box( // Background container
                     modifier = Modifier
-                        .background(Color.Magenta)
+                        .background(getBackgroundGradient(uiState.colorPalette))
                         .layoutId("bg_container")
                         .anchoredDraggable(
                             state = state,
@@ -175,7 +238,8 @@ fun MusicPlayerScreenContent(
             uiState.currentSong?.let {
                 MusicArtwork(
                     uiState = uiState,
-                    state = state
+                    isPlayingState = viewModel.isPlaying,
+                    dragState = state
                 )
             }
 
@@ -193,7 +257,7 @@ fun MusicPlayerScreenContent(
 
             uiState.currentSong?.let {
                 SeekBar(
-                    uiState = uiState,
+                    viewModel = viewModel,
                     onValueChange = { pos -> viewModel.onPlayerUIEvents(UIEvents.SeekTo(pos)) }
                 )
             }
@@ -214,18 +278,20 @@ fun MusicPlayerScreenContent(
             }
 
             uiState.currentSong?.let {
-                TrackPlayBackPositionText(uiState = uiState)
+                TrackPlayBackPositionText(
+                    uiState = uiState,
+                    progress = viewModel.progress
+                )
             }
 
             uiState.currentSong?.let {
-                TrackDurationText(uiState = uiState)
+                TrackDurationText(viewModel = viewModel)
             }
 
             uiState.currentSong?.let {
                 ShuffleButton(
                     uiState = uiState,
                     scope = scope,
-                    snackBarHostState = snackbarHostState,
                     click = {
                         viewModel.onPlayerUIEvents(UIEvents.Shuffle)
                     }
@@ -240,7 +306,7 @@ fun MusicPlayerScreenContent(
 
             uiState.currentSong?.let {
                 PlayButton(
-                    uiState = uiState,
+                    isPlayingState = viewModel.isPlaying,
                     click = {
                         viewModel.onPlayerUIEvents(UIEvents.PlayPause)
                     }
@@ -257,7 +323,6 @@ fun MusicPlayerScreenContent(
                 ReplayButton(
                     uiState = uiState,
                     scope = scope,
-                    snackBarHostState = snackbarHostState,
                     click = {
                         viewModel.onPlayerUIEvents(UIEvents.Repeat)
                     }

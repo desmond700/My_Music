@@ -27,6 +27,9 @@ interface PlaylistDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertPlaylistSong(data: PlaylistSongCrossRef)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    fun insertPlaylistSongs(data: List<PlaylistSongCrossRef>)
+
     @Update
     fun update(data: Playlist)
 
@@ -46,7 +49,14 @@ interface PlaylistDao {
     @Query("SELECT * FROM playlists ORDER BY modified_at DESC")
     fun getPlaylists(): Flow<List<PlaylistWithSongs>>
 
+    @Query("SELECT COUNT(*) FROM playlists")
+    fun getPlaylistsCount(): Flow<Int>
+
+    @Transaction
+    @Query("SELECT * FROM playlists WHERE playlistId = :playlistId")
+    fun getPlaylistsByPlaylistId(playlistId: Long): Flow<PlaylistWithSongs>
+
     @Query("SELECT * FROM playlists WHERE playlistId = :id")
-    fun getPlaylistById(id: Long): Playlist
+    fun getPlaylistById(id: Long): Flow<Playlist>
 
 }

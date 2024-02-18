@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -63,32 +64,44 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.mymusic.R
-import com.example.mymusic.model.Album
-import com.example.mymusic.ui.components.AlbumListItem
+import com.example.mymusic.data.room.entities.Album
+import com.example.mymusic.data.room.entities.Artist
+import com.example.mymusic.data.room.entities.Song
+import com.example.mymusic.data.room.relationship.PlaylistWithSongs
 import com.example.mymusic.ui.screens.album.AlbumSongsScreen
 import com.example.mymusic.ui.screens.album.AlbumsScreen
 import com.example.mymusic.ui.screens.artists.ArtistSongsScreen
 import com.example.mymusic.ui.screens.artists.ArtistsScreen
+import com.example.mymusic.ui.screens.edit_artwork.EditArtworkScreen
 import com.example.mymusic.ui.screens.player.PlayerScreen
+import com.example.mymusic.ui.screens.playlists.AddToPlaylistScreen
+import com.example.mymusic.ui.screens.playlists.PlaylistDetailsScreen
 import com.example.mymusic.ui.screens.playlists.PlaylistsScreen
 import com.example.mymusic.ui.theme.MyMusicTheme
+import com.example.mymusic.ui.viewmodels.AlbumListViewModel
+import com.example.mymusic.ui.viewmodels.AlbumListViewModelState
+import com.example.mymusic.ui.viewmodels.ArtistListViewModel
+import com.example.mymusic.ui.viewmodels.ArtistListViewModelState
+import com.example.mymusic.ui.viewmodels.HomeUiState
 import com.example.mymusic.ui.viewmodels.HomeViewModel
-import com.example.mymusic.ui.viewmodels.HomeViewModelState
+import com.example.mymusic.ui.viewmodels.PlaylistViewModel
+import com.example.mymusic.ui.viewmodels.PlaylistViewModelState
 import com.example.mymusic.ui.viewmodels.SongListViewModel
 import com.example.mymusic.ui.viewmodels.SongViewModelState
 import com.example.mymusic.utils.HomeRoutes
 import com.example.mymusic.utils.HomeScreenSection
 import com.example.mymusic.utils.HomeScreenSectionType
-import kotlinx.coroutines.flow.StateFlow
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,13 +109,20 @@ import kotlinx.coroutines.flow.StateFlow
 fun HomeScreen(
     modifier: Modifier = Modifier,
     homeViewModel: HomeViewModel = hiltViewModel(),
-    songListViewModel: SongListViewModel = hiltViewModel()
+    songListViewModel: SongListViewModel = hiltViewModel(),
+    albumListViewModel: AlbumListViewModel = hiltViewModel(),
+    artistListViewModel: ArtistListViewModel = hiltViewModel(),
+    playlistViewModel: PlaylistViewModel = hiltViewModel(),
 ) {
     // UiState of the HomeScreen that handle different states of home screen like Loading, Error,
     // Content etc.
 
-    val songListUiState = songListViewModel.uiState
-    val uiState by homeViewModel.uiState
+    val homeUiState by homeViewModel.uiState.collectAsStateWithLifecycle()
+    val songListUiState by songListViewModel.uiState.collectAsStateWithLifecycle()
+    val albumListUiState by albumListViewModel.uiState.collectAsStateWithLifecycle()
+    val artistListUiState by artistListViewModel.uiState.collectAsStateWithLifecycle()
+    val playlistUiState by playlistViewModel.uiState.collectAsStateWithLifecycle()
+//    val uiState by homeViewModel.uiState
 
     // Construct the lazy list state. This allows the associated state to survive beyond navigation
     // from and to the PdfViewerScreen or any other future screens, and therefore this way we get to
@@ -114,25 +134,7 @@ fun HomeScreen(
     val screenHeight = configuration.screenHeightDp.dp
     val navController = rememberNavController()
 
-//    Log.d("HomeScreen", "musicFiles count: ${uiState.musicFiles?.count()}")
 
-//    uiState.musicFiles?.forEach {music ->
-//        Log.d("HomeScreen", "---------------------------------")
-//        Log.d("HomeScreen", "music Artist: ${music.getArtist()}")
-//        Log.d("HomeScreen", "music Duration: ${music.getDuration()}")
-//        Log.d("HomeScreen", "music Size: ${music.getSize()}")
-//        Log.d("HomeScreen", "music songImageBitmap: ${music.songImageBitmap}")
-//        Log.d("HomeScreen", "music albumArtist: ${music.albumArtist}")
-//        Log.d("HomeScreen", "music title: ${music.title}")
-//        Log.d("HomeScreen", "music genre: ${music.genre}")
-//        Log.d("HomeScreen", "music writer: ${music.writer}")
-//        Log.d("HomeScreen", "music trackName: ${music.title}")
-//        Log.d("HomeScreen", "music composer: ${music.composer}")
-//        Log.d("HomeScreen", "music year: ${music.year}")
-//        Log.d("HomeScreen", "music modifiedAt: ${music.modifiedAt}")
-//        Log.d("HomeScreen", "music path: ${music.path}")
-//
-//    }
 
 //    Box(modifier = modifier) {
     PlayerScreen(
@@ -146,134 +148,197 @@ fun HomeScreen(
             enterTransition = { EnterTransition.None }
         ) {
             composable(HomeRoutes.Default.route) {
-                fun onNavigation(type: HomeScreenSectionType) {
-                    when (type) {
-                        HomeScreenSectionType.SONGS -> navController.navigate(HomeRoutes.Songs.route)
-                        HomeScreenSectionType.ARTISTS -> navController.navigate(HomeRoutes.Artists.route)
-                        HomeScreenSectionType.ALBUMS -> navController.navigate(HomeRoutes.Albums.route)
-                        HomeScreenSectionType.PLAYLISTS -> navController.navigate(HomeRoutes.Playlists.route)
-                    }
-                }
                 DefaultScreen(
-                    uiState,
-                    songListUiState,
-                    onNavigation = { onNavigation(it) }
+                    navController = navController,
+                    homeUiState = homeUiState,
+                    songListUiState = songListUiState,
+                    albumListUiState = albumListUiState,
+                    artistListUiState = artistListUiState,
+                    playlistUiState = playlistUiState
                 )
             }
             composable(HomeRoutes.Songs.route) {
                 SongsScreen(
+                    navController = navController,
                     onNavigation = { navController.popBackStack() },
-                    viewModel = homeViewModel
+                    viewModel = songListViewModel
                 )
             }
             composable(HomeRoutes.Artists.route) {
                 ArtistsScreen(
-                    onNavigation = { navController.popBackStack() },
-                    onNavigationArtistSongs = { artistId -> navController.navigate("artists/${artistId}") },
-                    viewModel = homeViewModel
+                    navController = navController,
+                    viewModel = artistListViewModel
                 )
             }
             composable(
                 HomeRoutes.ArtistSongs.route,
                 arguments = listOf(navArgument("artistId") {
-                    type = NavType.StringType
+                    type = NavType.LongType
                 })
             ) { backStackEntry ->
                 // Extract arguments from route
-                val artistId = backStackEntry.arguments?.getString("artistId")
+                val artistId = backStackEntry.arguments?.getLong("artistId")
 
                 artistId?.let { id ->
-                    ArtistSongsScreen(
-                        artistId = id,
-                        onNavigation = {}
-                    )
+                    val data = artistListUiState.getArtist(id)
+
+                    data?.let {
+                        ArtistSongsScreen(
+                            navController = navController,
+                            artistData = data,
+                            onNavigation = {}
+                        )
+                    }
                 }
             }
             composable(HomeRoutes.Albums.route) {
                 AlbumsScreen(
-                    onNavigation = { navController.popBackStack() },
-                    onNavigationAlbumSongs = { albumId -> navController.navigate("albums/${albumId}") },
-                    viewModel = homeViewModel
+                    navController = navController,
+                    viewModel = albumListViewModel
                 )
             }
             composable(
                 HomeRoutes.AlbumSongs.route,
                 arguments = listOf(navArgument("albumId") {
-                    type = NavType.StringType
+                    type = NavType.LongType
                 })
             ) { backStackEntry ->
                 // Extract arguments from route
-                val albumId = backStackEntry.arguments?.getString("albumId")
+                val albumId = backStackEntry.arguments?.getLong("albumId")
 
                 albumId?.let { id ->
-                    AlbumSongsScreen(
-                        albumId = id,
-                        onNavigation = { navController.popBackStack() }
-                    )
+                    val data = albumListUiState.getAlbum(id)
+
+                    data?.let {
+                        AlbumSongsScreen(navController = navController)
+                    }
+
                 }
 
             }
             composable(HomeRoutes.Playlists.route) {
                 PlaylistsScreen(
-                    onNavigation = { navController.popBackStack() },
+                    navController = navController,
+                    viewModel = playlistViewModel,
                 )
             }
-
+            composable(
+                HomeRoutes.PlaylistDetails.route,
+                arguments = listOf(navArgument("playlistId") {
+                    type = NavType.LongType
+                })
+            ) {
+                PlaylistDetailsScreen()
+            }
+            composable(
+                HomeRoutes.AddToPlaylist.route,
+                arguments = listOf(navArgument("songId") {
+                    type = NavType.LongType
+                })
+            ) {
+                AddToPlaylistScreen(navController = navController)
+            }
+            composable(
+                HomeRoutes.EditArtwork.route,
+                arguments = listOf(navArgument("songId") {
+                    type = NavType.LongType
+                })
+            ) {
+                EditArtworkScreen()
+            }
         }
     }
 }
 
 @Composable
 fun DefaultScreen(
-    uiState: HomeViewModelState,
-    songListUiState: StateFlow<SongViewModelState>,
-    onNavigation: (type: HomeScreenSectionType) -> Unit
+    navController: NavHostController,
+    homeUiState: HomeUiState,
+    songListUiState: SongViewModelState,
+    albumListUiState: AlbumListViewModelState,
+    artistListUiState: ArtistListViewModelState,
+    playlistUiState: PlaylistViewModelState
 ) {
+
     val homeScreenSections = listOf(
         HomeScreenSection(
             label = "Songs",
-            subLabel = songListUiState.value.songs.size,
+            subLabel = songListUiState.songs.size,
             icon = R.drawable.music,
             type = HomeScreenSectionType.SONGS
         ),
         HomeScreenSection(
             label = "Artists",
-            subLabel = uiState.artistsCount,
+            subLabel = artistListUiState.artists.size,
             icon = R.drawable.account_music,
             type = HomeScreenSectionType.ARTISTS
         ),
         HomeScreenSection(
             label = "Albums",
-            subLabel = uiState.albumsCount,
+            subLabel = albumListUiState.albums.size,
             icon = R.drawable.album,
             type = HomeScreenSectionType.ALBUMS
         ),
         HomeScreenSection(
             label = "Playlists",
-            subLabel = uiState.playlistsCount,
+            subLabel = playlistUiState.playlists.size,
             icon = R.drawable.playlist_music,
             type = HomeScreenSectionType.PLAYLISTS
         )
     )
     // A surface container using the 'background' color from the theme
     Scaffold(
-//            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-
         topBar = { HomeTopAppBar() }
     ) { padding ->
         LazyColumn(
             modifier = Modifier.padding(top = padding.calculateTopPadding())
         ) {
             item {
-                Library(homeScreenSections, click = onNavigation)
+                Library(
+                    homeScreenSections,
+                    click = { type ->
+                        when (type) {
+                            HomeScreenSectionType.SONGS -> navController.navigate(HomeRoutes.Songs.route)
+                            HomeScreenSectionType.ARTISTS -> navController.navigate(HomeRoutes.Artists.route)
+                            HomeScreenSectionType.ALBUMS -> navController.navigate(HomeRoutes.Albums.route)
+                            HomeScreenSectionType.PLAYLISTS -> navController.navigate(HomeRoutes.Playlists.route)
+                        }
+                    }
+                )
             }
             item {
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(20.dp))
             }
-            item {
-//                YourActions()
-                ActionItemList(title = "Recents")
+
+            if (homeUiState.actionList.isNullOrEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .height(80.dp)
+                            .fillMaxWidth()
+                        ,
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No actions available.",
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+                }
             }
+            else {
+                items(homeUiState.actionList) { action ->
+                    ActionItemList(
+                        title = action.title,
+                        list = action.list,
+                        onNavigation = {  }
+                    )
+                }
+            }
+
             item {
                 Spacer(modifier = Modifier.height(20.dp))
             }
@@ -287,7 +352,7 @@ fun HomeTopAppBar() {
     CenterAlignedTopAppBar(
         modifier = Modifier.border(1.dp, Color.Yellow),
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = Color.Red//MaterialTheme.colorScheme.background,
+            containerColor = MaterialTheme.colorScheme.background,
         ),
         navigationIcon = {
             IconButton(onClick = { }) {
@@ -432,29 +497,33 @@ fun YourActions() {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ActionItemList(title: String) {
+fun ActionItemList(
+    title: String,
+    list: List<Any>,
+    onNavigation: (type: HomeScreenSectionType) -> Unit
+) {
     val scrollState = rememberScrollState()
 
     Column {
-        Box(Modifier.padding(start = 20.dp)) {
-            Row(
-                modifier = Modifier
-                    .height(40.dp)
-                    .clickable { },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Icon(
-                    modifier = Modifier.size(18.dp),
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                    contentDescription = null
-                )
-            }
+        Row(
+            modifier = Modifier
+                .height(40.dp)
+                .padding(horizontal = 20.dp)
+                .clickable { },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+                modifier = Modifier.size(18.dp),
+                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                contentDescription = null
+            )
         }
+
         Spacer(modifier = Modifier.height(5.dp))
         FlowRow(
             modifier = Modifier
@@ -462,27 +531,33 @@ fun ActionItemList(title: String) {
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Spacer(modifier = Modifier.width(5.dp))
-            Array(11) {
-                AlbumListItem(
-                    modifier = Modifier
-                        .height(120.dp)
-                        ,
-                    album = Album(
-                        name = "Album Name",
-                        artist = "Album Artist"
-                    ),
-                    click = {}
-                )
-//                Surface(
-//                    modifier = Modifier
-//                        .padding(0.dp)
-//                        .height(120.dp)
-//                        .aspectRatio(1f),
-//                    shape = RoundedCornerShape(15.dp),
-//                    color = Color.Gray
-//                ) {
-//
-//                }
+            list.forEach { item ->
+                when(item) {
+                    is Song -> {
+                        SongActionItem(
+                            song = item,
+                            click = {  }
+                        )
+                    }
+                    is Album -> {
+                        AlbumActionItem(
+                            album = item,
+                            click = {  }
+                        )
+                    }
+                    is Artist -> {
+                        ArtistActionItem(
+                            artist = item,
+                            click = {  }
+                        )
+                    }
+                    is PlaylistWithSongs -> {
+                        PlaylistActionItem(
+                            playlistWithSongs = item,
+                            click = {  }
+                        )
+                    }
+                }
             }
             Spacer(modifier = Modifier.width(5.dp))
         }
@@ -584,16 +659,20 @@ fun YourActionsPreview() {
 @Composable
 fun ActionItemListPreview() {
     MyMusicTheme {
-        ActionItemList(title = "Recents")
+        ActionItemList(
+            title = "Recents",
+            list = emptyList(),
+            onNavigation = {}
+        )
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    MyMusicTheme {
-        val homeViewModel: HomeViewModel = viewModel()
-        HomeScreen(homeViewModel = homeViewModel)
-    }
-
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun HomeScreenPreview() {
+//    MyMusicTheme {
+//        val homeViewModel: HomeViewModel = viewModel()
+//        HomeScreen(homeViewModel = homeViewModel)
+//    }
+//
+//}

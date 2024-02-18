@@ -51,7 +51,7 @@ fun AddToPlaylistScreen(
     val openAlertDialog = remember { mutableStateOf(false) }
 
     when {
-        openAlertDialog.value -> createPlaylistDialog(
+        openAlertDialog.value -> CreatePlaylistDialog(
             onDismissRequest = { openAlertDialog.value = false },
             onConfirmation = { value ->
                 openAlertDialog.value = false

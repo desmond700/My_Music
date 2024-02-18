@@ -22,14 +22,14 @@ fun ListHeader(
     Box(
         modifier = modifier
             .padding(horizontal = 18.dp)
-            .height(45.dp),
+            .height(40.dp),
         contentAlignment = Alignment.CenterStart
     ) {
         Text(
             text = text,
             style = TextStyle(
                 color = color,
-                fontSize = 22.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Medium
             )
         )

@@ -13,9 +13,15 @@ class ArtistRepository @Inject constructor(
 
     fun insertAllArtists(artists: List<Artist>) = artistDao.insertAllArtists(artists)
 
-    fun getArtists(): Flow<List<ArtistWithSongs>> = artistDao.getArtists()
+    fun getArtistsWithSongs(): Flow<List<ArtistWithSongs>> = artistDao.getArtists()
+
+    fun getArtistsCount(): Flow<Int> = artistDao.getArtistsCount()
+
+    fun getArtistWithSongsByArtistId(artistId: Long) = artistDao.getArtistWithSongsByArtistId(artistId)
 
     fun getArtistById(artistId: Long): Artist = artistDao.getArtistById(artistId)
+
+    fun updateArtist(artist: Artist) = artistDao.update(artist)
 
     fun deleteArtist(artist: Artist) = artistDao.delete(artist)
 

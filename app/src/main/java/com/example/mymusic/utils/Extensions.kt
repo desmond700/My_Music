@@ -6,13 +6,22 @@ import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.provider.MediaStore
 import android.util.Log
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.database.getIntOrNull
+import androidx.core.database.getLongOrNull
+import androidx.core.database.getStringOrNull
 import androidx.media3.common.MediaMetadata
 import com.example.mymusic.data.room.entities.Album
 import com.example.mymusic.data.room.entities.Artist
-import com.example.mymusic.data.room.entities.Favourite
 import com.example.mymusic.data.room.entities.Song
-import com.example.mymusic.model.AudioItem
+import com.example.mymusic.data.room.relationship.PlaylistWithSongs
 import java.time.Duration
+
+
+fun String.quantityAware(count: Int): String {
+    return if (count == 1) this else this.dropLast(1)
+}
 
 fun Long.formatDuration(): String {
     val duration = Duration.ofMillis(this)
@@ -28,7 +37,7 @@ fun Long.formatDuration(): String {
     return "$minuteString:$secondsString"
 }
 
-fun AudioItem.metadata(): MediaMetadata = MediaMetadata.Builder()
+fun Song.metadata(): MediaMetadata = MediaMetadata.Builder()
     .setDisplayTitle(this.title)
     .setAlbumArtist(this.albumArtist)
     .setArtist(this.getArtist())
@@ -38,73 +47,80 @@ fun AudioItem.metadata(): MediaMetadata = MediaMetadata.Builder()
     .setWriter(this.author)
     .build()
 
-fun AudioItem.toFavouriteItem(): Favourite = Favourite(
-    musicId = this.id,
-    uri = this.path,
-)
+
 
 //fun AudioItem.toRecentItem(): RecentlyPlayed = RecentlyPlayed(
 //    musicId = this.id,
 //    uri = this.path,
 //)
 
+fun ByteArray.toBitmap(): Bitmap {
+    val bytes = this
+    return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+}
+
+fun ByteArray.toImageBitmap(): ImageBitmap {
+    val bytes = this
+    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    return bitmap.asImageBitmap()
+}
+
 fun Cursor.getCursorMetaData(): Song {
     val cursor = this
-    val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID))
+    val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns._ID))
 
     // Get Artist info
-    val artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST))
+    val artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.ARTIST))
 
     // Get Album info
-    val album = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM))
+    val album = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.ALBUM))
 
     // Get Album Artist info
-    val albumArtist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ARTIST))
+    val albumArtist: String? = cursor.getStringOrNull(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.ALBUM_ARTIST))
 
     // Get Author info
-    val author = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.AUTHOR))
+    val author = cursor.getStringOrNull(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.AUTHOR))
 
     // Get Genre info
-    val genre = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.GENRE))
+    val genre = cursor.getStringOrNull(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.GENRE))
 
     // Get Title info
-    val title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE))
+    val title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.TITLE))
     Log.d("getMusicMetaData", "title $title")
-    // Get Track info
-    val track = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME))
 
     // Get Writer info
-    val writer = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.WRITER))
+    val writer = cursor.getStringOrNull(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.WRITER))
 
     // Get Track number info
-    val trackNumber = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.CD_TRACK_NUMBER))
+    val trackNumber = cursor.getIntOrNull(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.CD_TRACK_NUMBER))
 
     // Get Disc number info
-    val discNumber = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISC_NUMBER))
+    val discNumber = cursor.getIntOrNull(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DISC_NUMBER))
 
     // Get duration info
-    val duration = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION))
+    val duration = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DURATION))
 
     // Get Year media was created
-    val year = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR))
+    val year: String? = cursor.getStringOrNull(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.YEAR))
+    Log.d("getMusicMetaData", "year $year")
 
     // Get MimeType info
-    val mimeType = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.MIME_TYPE))
+    val mimeType = cursor.getStringOrNull(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.MIME_TYPE))
 
     // Get Bitrate info
-    val bitrate = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.BITRATE))
+    val bitrate = cursor.getLongOrNull(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.BITRATE))
 
     // Get Composer info
-    val composer = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.COMPOSER))
+    val composer = cursor.getStringOrNull(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.COMPOSER))
 
     // Get date created or modified info
-    val date = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_MODIFIED))
+    val date = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATE_MODIFIED))
 
     // Get Size File size
-    val size = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE))
+    val size = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.SIZE))
 
     // The metadata key to retrieve the music album compilation status.
-    val path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA))
+    val path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATA))
 
     // Get sample rate info
 //    val sampleRateInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_SAMPLERATE)
@@ -112,23 +128,8 @@ fun Cursor.getCursorMetaData(): Song {
     // Get bits per sample info
 //    val bitsPerSampleInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITS_PER_SAMPLE)
     val metaRetriever = MediaMetadataRetriever()
-    val songImageBitmap: Bitmap? = try {
-        metaRetriever.setDataSource(path)
-
-        when (val artBytes: ByteArray? = metaRetriever.embeddedPicture) {
-            null -> null
-            else -> BitmapFactory.decodeByteArray(artBytes, 0, artBytes.size)
-        }
-    }
-    catch (e: IllegalArgumentException) {
-        Log.d("GetMediaFileData", "metaRetriever error message ${e.message}")
-        Log.d("GetMediaFileData", "metaRetriever error cause ${e.cause}")
-        Log.d("GetMediaFileData", "metaRetriever error stacktrace ${e.stackTraceToString()}")
-        null
-    }
 
     val artworkBlob = try {
-//        val metaRetriever = MediaMetadataRetriever()
         metaRetriever.setDataSource(path)
         metaRetriever.embeddedPicture
     }
@@ -137,10 +138,8 @@ fun Cursor.getCursorMetaData(): Song {
         null
     }
 
-    Log.d("getMusicMetaData", "year $year")
-
     val song = Song(
-//        id = id,
+        songId = id,
         artistName = artist,
         albumArtist = albumArtist,
         albumName = album,
@@ -166,14 +165,34 @@ fun Cursor.getCursorMetaData(): Song {
     return song
 }
 
+fun PlaylistWithSongs.getArtworks(): List<ImageBitmap>? {
+    val songs = this.songs
+    val bitmaps = mutableListOf<ImageBitmap>()
+
+     songs.forEach label@{ song ->
+        if (bitmaps.count() >= 4) return@label
+
+        if (song.artworkBlob != null) {
+            bitmaps.add(song.artworkBlob.toImageBitmap())
+        }
+    }
+
+    return bitmaps.ifEmpty { null }
+}
+
+fun List<Song>.getArtworkBlob(): ByteArray? {
+    return this.find { it.artworkBlob != null }?.artworkBlob
+}
+
 fun List<Song>.getAlbums(): List<Album> {
     val songs = this
     val albums = songs.groupBy { song -> song.albumName }
 
-    return albums.values.map { item ->
+    return albums.values.map { songList ->
         Album(
-            albumName = songs.first().albumName,
-            albumArtist = songs.first().artistName
+            albumName = songList.first().albumName,
+            albumArtist = songList.first().artistName,
+            albumArt = songList.getArtworkBlob(),
         )
     }
 }
@@ -182,11 +201,12 @@ fun List<Song>.getArtists(): List<Artist> {
     val songs = this
     val artist = songs.groupBy { it.artistName }
 
-    return artist.values.map { item ->
+    return artist.values.mapIndexed { index, songList  ->
         Artist(
-            artistName = songs.first().artistName,
-            musicId = songs.first().songId,
-            uri = songs.first().path
+            artistId = index.toLong(),
+            artistName = songList.first().artistName,
+            uri = songList.first().path,
+            artwork = songList.getArtworkBlob()
         )
     }
 }

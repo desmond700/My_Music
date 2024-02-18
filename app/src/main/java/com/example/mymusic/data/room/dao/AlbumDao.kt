@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AlbumDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insert(data: Album)
 
     fun insertWithTimestamp(data: Album) {
@@ -23,8 +23,17 @@ interface AlbumDao {
         })
     }
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertAllAlbums(data: List<Album>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    fun insertAlbumSongs(albumSongCrossRef: List<Album>)
+
+    @Transaction
+    fun insertAndDeleteAllAlbums(data: List<Album>) {
+        deleteAllEntries()
+        insertAllAlbums(data)
+    }
 
     @Update
     fun update(data: Album)
@@ -41,11 +50,23 @@ interface AlbumDao {
     @Delete
     fun deleteAlbums(data: List<Album>)
 
+    @Query("DELETE FROM albums")
+    fun deleteAllEntries()
+
+    @Query("SELECT * FROM albums ORDER BY modified_at DESC")
+    fun getAlbums(): Flow<List<Album>>
+
+    @Query("SELECT COUNT(*) FROM albums")
+    fun getAlbumsCount(): Flow<Int>
+
+    @Query("SELECT * FROM albums WHERE albumId = :albumId")
+    fun getAlbumsWithSongsByAlbumId(albumId: Long): Flow<AlbumWithSongs>
+
     @Transaction
     @Query("SELECT * FROM albums ORDER BY modified_at DESC")
-    fun getAlbums(): Flow<List<AlbumWithSongs>>
+    fun getAlbumsWithSongs(): Flow<List<AlbumWithSongs>>
 
-    @Query("SELECT * FROM albums WHERE id = :id")
+    @Query("SELECT * FROM albums WHERE albumId = :id")
     fun getAlbumById(id: Long): Album
 
 }

@@ -87,14 +87,14 @@ val MyMusicTypography = Typography(
         lineBreak = LineBreak.Heading
     ),
     titleSmall = defaultTextStyle.copy(
-        fontSize = 14.sp,
+        fontSize = 15.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp,
         fontWeight = FontWeight.Medium,
         lineBreak = LineBreak.Heading
     ),
     labelLarge = defaultTextStyle.copy(
-        fontSize = 14.sp,
+        fontSize = 15.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp,
         fontWeight = FontWeight.Medium

@@ -1,5 +1,6 @@
 package com.example.mymusic.exoplayer.service
 
+import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -19,28 +20,52 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @androidx.annotation.OptIn(UnstableApi::class)
-class MusicServiceHandler @OptIn(DelicateCoroutinesApi::class)
-@Inject constructor(
+@OptIn(DelicateCoroutinesApi::class)
+class MusicServiceHandler @Inject constructor(
     private val exoPlayer: ExoPlayer,
     private val coroutineScope: CoroutineScope = GlobalScope,
-    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Main
+    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main
 ) : Player.Listener {
-    private val _audioState = MutableStateFlow(MusicState())
-    val audioState = _audioState.asStateFlow()
+//    private val _audioState = MutableStateFlow(MusicState())
+//    val audioState = _audioState.asStateFlow()
+    companion object {
+        const val TAG = "MusicServiceHandler"
+    }
+
+    private val _currentMediaItemIndex = MutableStateFlow(0)
+    val currentMediaItemIndex = _currentMediaItemIndex.asStateFlow()
+
+    private val _isPlaying = MutableStateFlow(false)
+    val isPlaying = _isPlaying.asStateFlow()
+
+    private val _progressState = MutableStateFlow(0L)
+    val progressState = _progressState.asStateFlow()
+
+    private val _repeatMode = MutableStateFlow(Player.REPEAT_MODE_OFF)
+    val repeatMode = _repeatMode.asStateFlow()
+
+    private val _shuffleState = MutableStateFlow(false)
+    val shuffleState = _shuffleState.asStateFlow()
+
+    private val _duration = MutableStateFlow(0L)
+    val duration = _duration.asStateFlow()
+
 
     private var job: Job? = null
 
     init {
         exoPlayer.addListener(this)
+        Log.d(TAG, "exoPlayer.deviceVolume ${exoPlayer.deviceVolume}")
+        Log.d(TAG, "exoPlayer.volume ${exoPlayer.volume}")
     }
 
     @OptIn(DelicateCoroutinesApi::class)
     fun setMediaItemList(mediaItems: List<MediaItem>, selectedAudioIndex: Int) {
         exoPlayer.setMediaItems(mediaItems)
         exoPlayer.prepare()
-
         exoPlayer.seekToDefaultPosition(selectedAudioIndex)
-        _audioState.update { it.copy(isPlaying = true) }
+//        _audioState.update { it.copy(isPlaying = true) }
+        _isPlaying.update { true }
         exoPlayer.playWhenReady = true
         GlobalScope.launch(Dispatchers.Main) {
             startProgressUpdate()
@@ -53,6 +78,19 @@ class MusicServiceHandler @OptIn(DelicateCoroutinesApi::class)
         exoPlayer.prepare()
     }
 
+    override fun onVolumeChanged(volume: Float) {
+        super.onVolumeChanged(volume)
+
+        Log.d(TAG, "onVolumeChanged $volume")
+
+    }
+
+    override fun onDeviceVolumeChanged(volume: Int, muted: Boolean) {
+        super.onDeviceVolumeChanged(volume, muted)
+
+        Log.d(TAG, "onDeviceVolumeChanged $volume")
+        Log.d(TAG, "exoPlayer.deviceVolume ${exoPlayer.volume}")
+    }
     suspend fun onPlayerEvents(
         playerEvent: PlayerEvent,
         selectedAudioIndex: Int = -1,
@@ -72,7 +110,8 @@ class MusicServiceHandler @OptIn(DelicateCoroutinesApi::class)
                     }
                     else -> {
                         exoPlayer.seekToDefaultPosition(selectedAudioIndex)
-                        _audioState.update { it.copy(isPlaying = true) }
+//                        _audioState.update { it.copy(isPlaying = true) }
+                        _isPlaying.update { true }
                         exoPlayer.playWhenReady = true
                         startProgressUpdate()
                     }
@@ -81,7 +120,8 @@ class MusicServiceHandler @OptIn(DelicateCoroutinesApi::class)
 
             PlayerEvent.Stop -> stopProgressUpdate()
             is PlayerEvent.UpdateProgress -> {
-                exoPlayer.seekTo((exoPlayer.duration * playerEvent.newProgress).toLong())
+//                exoPlayer.seekTo((exoPlayer.duration * playerEvent.newProgress).toLong())
+                exoPlayer.seekTo((playerEvent.newProgress).toLong())
             }
             is PlayerEvent.Repeat -> {
                 exoPlayer.repeatMode = when (exoPlayer.repeatMode) {
@@ -90,7 +130,8 @@ class MusicServiceHandler @OptIn(DelicateCoroutinesApi::class)
                     else -> Player.REPEAT_MODE_OFF
                 }
 
-                _audioState.update { it.copy(repeatMode = exoPlayer.repeatMode) }
+//                _audioState.update { it.copy(repeatMode = exoPlayer.repeatMode) }
+                _repeatMode.update { exoPlayer.repeatMode }
             }
             is  PlayerEvent.Shuffle -> {
                 when(exoPlayer.shuffleModeEnabled) {
@@ -109,7 +150,8 @@ class MusicServiceHandler @OptIn(DelicateCoroutinesApi::class)
                     }
                 }
 
-                _audioState.update { it.copy(shuffleModeEnabled = exoPlayer.shuffleModeEnabled) }
+//                _audioState.update { it.copy(shuffleModeEnabled = exoPlayer.shuffleModeEnabled) }
+                _shuffleState.update { exoPlayer.shuffleModeEnabled }
             }
         }
     }
@@ -117,16 +159,18 @@ class MusicServiceHandler @OptIn(DelicateCoroutinesApi::class)
     override fun onPlaybackStateChanged(playbackState: Int) {
         when (playbackState) {
             ExoPlayer.STATE_BUFFERING -> {
-                _audioState.update { it.copy(progress = exoPlayer.currentPosition) }
+//                _audioState.update { it.copy(progress = exoPlayer.currentPosition) }
+                _progressState.update { exoPlayer.currentPosition }
             }
             ExoPlayer.STATE_READY -> {
-                _audioState.update { it.copy(duration = exoPlayer.duration) }
+//                _audioState.update { it.copy(duration = exoPlayer.duration) }
+                _duration.update { exoPlayer.duration }
             }
-
             Player.STATE_ENDED -> {
-            }
 
+            }
             Player.STATE_IDLE -> {
+
             }
         }
         super.onPlaybackStateChanged(playbackState)
@@ -134,14 +178,18 @@ class MusicServiceHandler @OptIn(DelicateCoroutinesApi::class)
 
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         super.onIsPlayingChanged(isPlaying)
-        _audioState.update {
-            it.copy(
-                isPlaying = isPlaying,
-                currentMediaItemIndex = exoPlayer.currentMediaItemIndex
-            )
-        }
+//        _audioState.update {
+//            it.copy(
+//                isPlaying = isPlaying,
+//                currentMediaItemIndex = exoPlayer.currentMediaItemIndex
+//            )
+//        }
+
+        _isPlaying.update { isPlaying }
+        _currentMediaItemIndex.update { exoPlayer.currentMediaItemIndex }
+
         if (isPlaying) {
-            coroutineScope.launch(defaultDispatcher) {
+            coroutineScope.launch(mainDispatcher) {
                 startProgressUpdate()
             }
         } else {
@@ -155,7 +203,8 @@ class MusicServiceHandler @OptIn(DelicateCoroutinesApi::class)
             stopProgressUpdate()
         } else {
             exoPlayer.play()
-            _audioState.update { it.copy(isPlaying = true) }
+//            _audioState.update { it.copy(isPlaying = true) }
+            _isPlaying.update { true }
             startProgressUpdate()
         }
     }
@@ -163,13 +212,15 @@ class MusicServiceHandler @OptIn(DelicateCoroutinesApi::class)
     private suspend fun startProgressUpdate() = job.run {
         while (true) {
             delay(500)
-            _audioState.update { it.copy(progress = exoPlayer.currentPosition) }
+//            _audioState.update { it.copy(progress = exoPlayer.currentPosition) }
+            _progressState.update { exoPlayer.currentPosition }
         }
     }
 
     private fun stopProgressUpdate() {
         job?.cancel()
-        _audioState.update { it.copy(isPlaying = false) }
+//        _audioState.update { it.copy(isPlaying = false) }
+        _isPlaying.update { false }
     }
 }
 

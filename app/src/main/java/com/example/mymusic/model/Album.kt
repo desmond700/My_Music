@@ -1,10 +1,7 @@
 package com.example.mymusic.model
 
-import android.graphics.Bitmap
-
-data class Album(
-    val name: String = "",
-    val artist: String = "",
-    val albumArt: Bitmap? = null,
-    val songs: List<AudioItem> = emptyList()
+data class AlbumModel(
+    val albumName: String,
+    val albumArtist: String,
+    val albumArt: ByteArray? = null
 )

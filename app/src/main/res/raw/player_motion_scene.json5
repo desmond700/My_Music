@@ -7,7 +7,10 @@
         top: ['parent', 'top', 0],
         start: ['parent', 'start', 0],
         end: ['parent', 'end', 0],
-        bottom: ['parent', 'bottom', 0]
+        bottom: ['parent', 'bottom', 0],
+        custom: {
+          padding: 70
+        }
       },
       bg_container: {
         height: 70,
@@ -20,8 +23,8 @@
         height: 60,
         width: 60,
         start: ['bg_container', 'start', 10],
-        top: ['bg_container', 'top', 25],
-//        bottom: ['bg_container', 'bottom', 10],
+        top: ['bg_container', 'top', 5],
+        bottom: ['bg_container', 'bottom', 5],
       },
       drag_indicator: {
         height: 6,
@@ -131,7 +134,10 @@
         top: ['parent', 'top', 0],
         start: ['parent', 'start', 0],
         end: ['parent', 'end', 0],
-        bottom: ['parent', 'bottom', 0]
+        bottom: ['parent', 'bottom', 0],
+        custom: {
+          padding: 0
+        }
       },
       bg_container: {
         height: 'spread',
@@ -144,7 +150,7 @@
       drag_indicator: {
         height: 8,
         width: 45,
-        top: ['bg_container', 'top', 20],
+        top: ['bg_container', 'top', 38],
         centerHorizontally: 'bg_container',
         alpha: 1,
       },
@@ -158,7 +164,7 @@
       music_title_normal: {
         width: 'spread',
         top: ['music_art', 'bottom', 50],
-        start: ['bg_container', 'start', 20],
+        start: ['bg_container', 'start', 0],
         end: ['player_menu_button', 'start', 10],
         alpha: 1,
       },

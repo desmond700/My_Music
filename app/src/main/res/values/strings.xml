@@ -4,4 +4,21 @@
     <string name="title_activity_my_music_app_bar">MyMusicAppBar</string>
     <string name="title_activity_player_screen">PlayerScreen</string>
     <string name="title_activity_search">Search</string>
+    <string name="title_activity_my_music_app">MyMusicApp</string>
+    <string name="load_error">Can\'t find any files</string>
+    <string name="title_activity_music_player_application">MusicPlayerApplication</string>
+    <string name="title_activity_songs">Songs</string>
+    <string name="title_activity_artists">Artists</string>
+    <string name="title_activity_albums">Albums</string>
+    <string name="title_activity_playlists">Playlists</string>
+    <string name="title_activity_album_songs_screen">AlbumSongsScreen</string>
+    <string name="title_activity_artist_songs_screen">ArtistSongsScreen</string>
+    <string name="title_activity_menu_screen">MenuScreen</string>
+    <string name="title_activity_settings_screen">SettingsScreen</string>
+
+    <string name="notification_channel_name">My Music Channel</string>
+    <string name="notification_channel_description">Shows the currently playing music</string>
+
+    <string name="add_to_playlist">Add to a Playlist</string>
+    <string name="add_to_favourites">Add to Favourites</string>
 </resources>

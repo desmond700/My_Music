@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Favorite
@@ -37,6 +36,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,37 +48,45 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.layoutId
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import com.example.mymusic.R
 import com.example.mymusic.ui.components.MusicArt
+import com.example.mymusic.ui.viewmodels.MusicPlayerViewModel
 import com.example.mymusic.ui.viewmodels.MusicPlayerViewModelState
 import com.example.mymusic.utils.formatDuration
+import com.example.mymusic.utils.toImageBitmap
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.StateFlow
 
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MusicArtwork(
     uiState: MusicPlayerViewModelState,
-    state: AnchoredDraggableState<DragAnchors>,
+    dragState: AnchoredDraggableState<DragAnchors>,
+    isPlayingState: StateFlow<Boolean>
 ) {
-    val isPlaying = uiState.isPlaying
+    val isPlaying by isPlayingState.collectAsState()
     val animatedScale by animateFloatAsState(
-        targetValue = if (isPlaying) 1.2f else 1f,
+        targetValue = when(dragState.currentValue) {
+            DragAnchors.Start -> 1f
+            else -> if (isPlaying) 1.2f else 1f
+        },
         animationSpec = tween(
             durationMillis = 500,
             easing = EaseInBounce
         ),
         label = "scale"
     )
-
+    Log.d("MusicArtwork", "isPlaying $isPlaying")
 
     MusicArt(
         modifier = Modifier
@@ -88,11 +96,11 @@ fun MusicArtwork(
                 this.scaleY = animatedScale
             }
             .anchoredDraggable(
-                state = state,
+                state = dragState,
                 reverseDirection = true,
                 orientation = Orientation.Vertical
             ),
-        bitmap = uiState.currentSong!!.getArtworkBitmap()
+        bitmap = uiState.currentSong!!.artworkBlob?.toImageBitmap()
     )
 }
 
@@ -112,12 +120,16 @@ fun MusicTitleColumnNormal(uiState: MusicPlayerViewModelState) {
     val artist = uiState.currentSong!!.getArtist()
     val title = uiState.currentSong.title
 
+    Log.d("MusicTitleColumnNormal", "artist $artist, title $title")
+
     Column(
         modifier = Modifier.layoutId("music_title_normal"),
         horizontalAlignment = Alignment.Start
     ) {
         Text(
-            modifier = Modifier.basicMarquee(),
+            modifier = Modifier
+                .basicMarquee()
+                .padding(start = 20.dp),
             text = artist,
             style = TextStyle(
                 color = Color.White,
@@ -127,7 +139,9 @@ fun MusicTitleColumnNormal(uiState: MusicPlayerViewModelState) {
         )
         Spacer(modifier = Modifier.height(5.dp))
         Text(
-            modifier = Modifier.basicMarquee(),
+            modifier = Modifier
+                .basicMarquee()
+                .padding(start = 20.dp),
             text = title,
             style = TextStyle(
                 color = Color.LightGray,
@@ -205,7 +219,9 @@ fun PlayerMenuButton(click: () -> Unit) {
             // 6
             DropdownMenuItem(
                 text = {
-                    Text("Add to a Playlist")
+                    Text(
+                        text = stringResource(id = R.string.add_to_playlist)
+                    )
                 },
                 trailingIcon = {
                     Icon(
@@ -218,7 +234,9 @@ fun PlayerMenuButton(click: () -> Unit) {
             HorizontalDivider()
             DropdownMenuItem(
                 text = {
-                    Text("Add to Favourites")
+                    Text(
+                        text = stringResource(id = R.string.add_to_favourites)
+                    )
                 },
                 trailingIcon = {
                     Icon(
@@ -242,11 +260,11 @@ fun PlayerMenuButton(click: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SeekBar(
-    uiState: MusicPlayerViewModelState,
+    viewModel: MusicPlayerViewModel,
     onValueChange: (value: Float) -> Unit
 ) {
-    val duration = uiState.duration.toFloat()
-    val progress = uiState.progress.toFloat()
+    val duration by viewModel.duration.collectAsStateWithLifecycle()
+    val progressValue by viewModel.progress.collectAsStateWithLifecycle()
 
 //    Log.d("PlayerScreen", "SeekBar progress $progress")
 //    Log.d("PlayerScreen", "SeekBar duration $duration")
@@ -254,8 +272,9 @@ fun SeekBar(
 
     Slider(
         modifier = Modifier.layoutId("seekbar"),
-        value = progress,
+        value = progressValue.toFloat(),
         onValueChange = { value ->
+            Log.d("SeekBar", "onValueChange value $value")
             onValueChange(value)
         },
         track = { sliderState ->
@@ -264,7 +283,7 @@ fun SeekBar(
                 sliderState = sliderState
             )
         },
-        valueRange = 0f..duration
+        valueRange = 0f..duration.toFloat()
     )
 }
 
@@ -317,12 +336,16 @@ fun VolumeSeekBar(
 }
 
 @Composable
-fun TrackPlayBackPositionText(uiState: MusicPlayerViewModelState) {
-    val progress = uiState.progress
-    Log.d("PlayerScreen", "TrackPlayBackPositionText progress ${progress.formatDuration()}")
+fun TrackPlayBackPositionText(
+    uiState: MusicPlayerViewModelState,
+    progress: StateFlow<Long>
+) {
+    val progressValue by progress.collectAsState()
+    val progressString = progressValue.formatDuration()
+    Log.d("TrackPlayBackPositionText", "progress $progress")
     Text(
         modifier = Modifier.layoutId("track_playback_position_text"),
-        text = progress.formatDuration(),
+        text = progressString,
         style = TextStyle(
             color = Color.DarkGray,
             fontSize = 14.sp,
@@ -332,12 +355,12 @@ fun TrackPlayBackPositionText(uiState: MusicPlayerViewModelState) {
 }
 
 @Composable
-fun TrackDurationText(uiState: MusicPlayerViewModelState) {
-    val duration = uiState.duration.formatDuration()
+fun TrackDurationText(viewModel: MusicPlayerViewModel) {
+    val duration by viewModel.duration.collectAsStateWithLifecycle()
 
     Text(
         modifier = Modifier.layoutId("track_duration_text"),
-        text = duration,
+        text = duration.formatDuration(),
         style = TextStyle(
             color = Color.DarkGray,
             fontSize = 14.sp,
@@ -350,26 +373,11 @@ fun TrackDurationText(uiState: MusicPlayerViewModelState) {
 fun ShuffleButton(
     uiState: MusicPlayerViewModelState,
     scope: CoroutineScope,
-    snackBarHostState: SnackbarHostState,
     click: () -> Unit
 ) {
     val shuffleIcon: Int = when(uiState.shuffleModeEnabled) {
-        true -> {
-            scope.launch {
-//                snackBarHostState.showSnackbar(
-//                    message = "Shuffle on"
-//                )
-            }
-            R.drawable.shuffle
-        }
-        else -> {
-            scope.launch {
-//                snackBarHostState.showSnackbar(
-//                    message = "Shuffle off"
-//                )
-            }
-            R.drawable.shuffle_disabled
-        }
+        true -> R.drawable.shuffle
+        else -> R.drawable.shuffle_disabled
     }
 
     Surface(
@@ -411,8 +419,12 @@ fun SkipPreviousButton(click: () -> Unit) {
 }
 
 @Composable
-fun PlayButton(uiState: MusicPlayerViewModelState, click: () -> Unit) {
-    val playStateIcon: Int = when (uiState.isPlaying) {
+fun PlayButton(
+    isPlayingState: StateFlow<Boolean>,
+    click: () -> Unit
+) {
+    val isPlaying by isPlayingState.collectAsState()
+    val playStateIcon: Int = when (isPlaying) {
         true -> R.drawable.pause
         else -> R.drawable.play
     }
@@ -460,38 +472,13 @@ fun SkipNextButton(click: () -> Unit) {
 @Composable
 fun ReplayButton(
     scope: CoroutineScope,
-    snackBarHostState: SnackbarHostState,
     uiState: MusicPlayerViewModelState,
     click: () -> Unit
 ) {
     val repeatModeIcon = when(uiState.repeatMode) {
-        Player.REPEAT_MODE_ONE -> {
-            scope.launch {
-                snackBarHostState.showSnackbar(
-                    message = "Repeat 1",
-                    actionLabel = null
-                )
-            }
-            R.drawable.repeat_once
-        }
-        Player.REPEAT_MODE_ALL -> {
-            scope.launch {
-//                snackBarHostState.showSnackbar(
-//                    message = "Repeat All",
-//                    actionLabel = null
-//                )
-            }
-            R.drawable.repeat
-        }
-        else -> {
-            scope.launch {
-//                snackBarHostState.showSnackbar(
-//                    message = "Repeat Off",
-//                    actionLabel = null
-//                )
-            }
-            R.drawable.repeat_off
-        }
+        Player.REPEAT_MODE_ONE -> R.drawable.repeat_once
+        Player.REPEAT_MODE_ALL -> R.drawable.repeat
+        else -> R.drawable.repeat_off
     }
 
     Surface(

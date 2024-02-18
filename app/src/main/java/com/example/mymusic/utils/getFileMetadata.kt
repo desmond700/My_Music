@@ -1,79 +1,116 @@
 package com.example.mymusic.utils
 
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
+import android.provider.MediaStore.Audio.Media
+import android.util.Log
+import com.example.mymusic.model.AudioItem
 
 
-fun getMediaFileData(filePath: String) {
-    // filePath is of type String which holds the path of file
-    val metaRetriever = MediaMetadataRetriever()
+fun getMusicMetaData(cursor: Cursor): AudioItem {
+    val id = cursor.getLong(cursor.getColumnIndexOrThrow(Media._ID))
 
     // Get Artist info
-    val artistInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
+    val artist = cursor.getString(cursor.getColumnIndexOrThrow(Media.ARTIST))
 
     // Get Album info
-    val albumInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
+    val album = cursor.getString(cursor.getColumnIndexOrThrow(Media.ALBUM))
 
     // Get Album Artist info
-    val albumArtistInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
+    val albumArtist = cursor.getString(cursor.getColumnIndexOrThrow(Media.ALBUM_ARTIST))
 
     // Get Author info
-    val authorInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_AUTHOR)
+    val author = cursor.getString(cursor.getColumnIndexOrThrow(Media.AUTHOR))
 
     // Get Genre info
-    val genreInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE)
+    val genre = cursor.getString(cursor.getColumnIndexOrThrow(Media.GENRE))
 
     // Get Title info
-    val titleInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
+    val title = cursor.getString(cursor.getColumnIndexOrThrow(Media.TITLE))
+    Log.d("getMusicMetaData", "title $title")
+    // Get Track info
+    val track = cursor.getString(cursor.getColumnIndexOrThrow(Media.DISPLAY_NAME))
 
     // Get Writer info
-    val writerInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_WRITER)
+    val writer = cursor.getString(cursor.getColumnIndexOrThrow(Media.WRITER))
 
     // Get Track number info
-    val trackNumber = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER)
+    val trackNumber = cursor.getInt(cursor.getColumnIndexOrThrow(Media.CD_TRACK_NUMBER))
 
     // Get Disc number info
-    val discNumber = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DISC_NUMBER)
+    val discNumber = cursor.getInt(cursor.getColumnIndexOrThrow(Media.DISC_NUMBER))
 
     // Get duration info
-    val durationInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-    val duration = durationInfo?.toLong()
+    val duration = cursor.getLong(cursor.getColumnIndexOrThrow(Media.DURATION))
 
     // Get Year media was created
-    val yearInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR)
+    val year = cursor.getString(cursor.getColumnIndexOrThrow(Media.YEAR))
 
     // Get MimeType info
-    val mimeTypeInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE)
-
-    // Get has image info
-    val hasImageInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_IMAGE)
-    val hasImage = hasImageInfo.toBoolean()
+    val mimeType = cursor.getString(cursor.getColumnIndexOrThrow(Media.MIME_TYPE))
 
     // Get Bitrate info
-    val bitrateInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
+    val bitrate = cursor.getLong(cursor.getColumnIndexOrThrow(Media.BITRATE))
 
     // Get Composer info
-    val composer = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_COMPOSER)
+    val composer = cursor.getString(cursor.getColumnIndexOrThrow(Media.COMPOSER))
 
     // Get date created or modified info
-    val date = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE)
+    val date = cursor.getLong(cursor.getColumnIndexOrThrow(Media.DATE_MODIFIED))
+
+    // Get Size File size
+    val size = cursor.getLong(cursor.getColumnIndexOrThrow(Media.SIZE))
 
     // The metadata key to retrieve the music album compilation status.
-    val albumCompilationStatusInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_COMPILATION)
+    val path = cursor.getString(cursor.getColumnIndexOrThrow(Media.DATA))
 
     // Get sample rate info
 //    val sampleRateInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_SAMPLERATE)
 
     // Get bits per sample info
 //    val bitsPerSampleInfo = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITS_PER_SAMPLE)
+    val metaRetriever = MediaMetadataRetriever()
+    val songImageBitmap: Bitmap? = try {
+        metaRetriever.setDataSource(path)
 
-    metaRetriever.setDataSource(filePath)
-
-    val songImageBitmap: Bitmap? = when (val artBytes: ByteArray? = metaRetriever.embeddedPicture) {
-        null -> null
-        else -> BitmapFactory.decodeByteArray(artBytes, 0, artBytes.size)
+        when (val artBytes: ByteArray? = metaRetriever.embeddedPicture) {
+            null -> null
+            else -> BitmapFactory.decodeByteArray(artBytes, 0, artBytes.size)
+        }
+    }
+    catch (e: IllegalArgumentException) {
+        Log.d("GetMediaFileData", "metaRetriever error message ${e.message}")
+        Log.d("GetMediaFileData", "metaRetriever error cause ${e.cause}")
+        Log.d("GetMediaFileData", "metaRetriever error stacktrace ${e.stackTraceToString()}")
+        null
     }
 
+    Log.d("getMusicMetaData", "year $year")
 
+    val music = AudioItem(
+        id = id,
+        artist = artist,
+        albumArtist = albumArtist,
+        album = album,
+        author = author,
+        genre = genre,
+        title = title,
+        writer = writer,
+        trackNumber = trackNumber,
+        discNumber = discNumber,
+        duration = duration,
+        mimeType = mimeType,
+        bitrate = bitrate,
+        composer = composer,
+        year = year,
+        modifiedAt = date,
+        size = size,
+        path = path
+    )
+
+    metaRetriever.release()
+
+    return music
 }

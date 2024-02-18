@@ -7,9 +7,15 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
+import com.example.mymusic.data.helper.ContentResolverHelper
+import com.example.mymusic.data.repository.AlbumRepository
+import com.example.mymusic.data.repository.MusicPlayedAmountRepository
+import com.example.mymusic.data.repository.PlaylistRepository
 import com.example.mymusic.exoplayer.notification.MusicNotificationManager
 import com.example.mymusic.exoplayer.service.MusicServiceHandler
+import com.example.mymusic.usecases.AlbumUseCases
 import com.example.mymusic.usecases.MusicUseCases
+import com.example.mymusic.usecases.PlaylistUseCases
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -65,6 +71,27 @@ object MediaModule {
     @Provides
     @Singleton
     fun provideMusicUseCase(
-        musicServiceHandler: MusicServiceHandler
-    ): MusicUseCases = MusicUseCases(musicServiceHandler)
+        musicServiceHandler: MusicServiceHandler,
+        musicPlayedAmountRepository: MusicPlayedAmountRepository
+    ): MusicUseCases = MusicUseCases(
+        musicServiceHandler,
+        musicPlayedAmountRepository
+    )
+
+    @Provides
+    @Singleton
+    fun provideAlbumUsCases(
+        albumRepository: AlbumRepository
+    ): AlbumUseCases = AlbumUseCases(albumRepository)
+
+    @Provides
+    @Singleton
+    fun providePlaylist(
+        playlistRepository: PlaylistRepository
+    ): PlaylistUseCases = PlaylistUseCases(playlistRepository)
+
+    @Provides
+    @Singleton
+    fun provideContentResolver(@ApplicationContext context: Context): ContentResolverHelper =
+        ContentResolverHelper(context = context)
 }

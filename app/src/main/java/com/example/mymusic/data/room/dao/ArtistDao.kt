@@ -43,6 +43,12 @@ interface ArtistDao {
     @Query("SELECT * FROM artist ORDER BY modified_at DESC")
     fun getArtists(): Flow<List<ArtistWithSongs>>
 
+    @Query("SELECT COUNT(*) FROM artist")
+    fun getArtistsCount(): Flow<Int>
+
+    @Query("SELECT * FROM artist WHERE artistId = :aristId")
+    fun getArtistWithSongsByArtistId(aristId: Long): Flow<ArtistWithSongs>
+
     @Query("SELECT * FROM artist WHERE artistId = :id")
     fun getArtistById(id: Long): Artist
 

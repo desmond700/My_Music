@@ -2,7 +2,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+
     <application
+        android:name=".MusicPlayerApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -13,34 +23,8 @@
         android:theme="@style/Theme.MyMusic"
         tools:targetApi="31">
         <activity
-            android:name=".ui.Search"
-            android:exported="false"
-            android:label="@string/title_activity_search"
-            android:theme="@style/Theme.MyMusic" />
-        <activity
-            android:name=".ui.player.PlayerScreen"
-            android:exported="false"
-            android:label="@string/title_activity_player_screen"
-            android:theme="@style/Theme.MyMusic" />
-        <activity
-            android:name=".ui.PlayerScreen"
-            android:exported="false"
-            android:label="@string/title_activity_player_screen"
-            android:theme="@style/Theme.MyMusic" />
-        <activity
-            android:name=".ui.components.MyMusicAppBar"
-            android:exported="false"
-            android:label="@string/title_activity_my_music_app_bar"
-            android:theme="@style/Theme.MyMusic" />
-        <activity
-            android:name=".ui.home.HomeScreen"
-            android:exported="false"
-            android:label="@string/title_activity_home_screen"
-            android:theme="@style/Theme.MyMusic" />
-        <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.MyMusic">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -48,6 +32,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".exoplayer.service.MusicService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService"/>
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

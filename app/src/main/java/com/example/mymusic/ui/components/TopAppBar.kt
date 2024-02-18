@@ -1,12 +1,10 @@
 package com.example.mymusic.ui.components
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -17,6 +15,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarColors
@@ -59,8 +58,7 @@ fun SearchAppBar(
     Box(
         modifier = Modifier
             .height(60.dp)
-            .fillMaxWidth()
-            .border(1.dp, Color.Green, RoundedCornerShape(1.dp)),
+            .fillMaxWidth(),
     ) {
         CenterAlignedTopAppBar(
             modifier = Modifier
@@ -83,10 +81,7 @@ fun SearchAppBar(
                 Text(
                     modifier = Modifier.align(alignment = Alignment.Center),
                     text = label,
-                    style = TextStyle(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    style = MaterialTheme.typography.titleLarge
                 )
             },
             actions = {
@@ -159,4 +154,36 @@ fun SearchAppBar(
         }
     }
 
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PlayerTopAppBar(onNavigation: () -> Unit) {
+    CenterAlignedTopAppBar(
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+        ),
+        navigationIcon = {
+            IconButton(onClick = onNavigation) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    tint = Color.White,
+                    contentDescription = null
+                )
+            }
+        },
+        title = {
+            Text(
+                text = "Player",
+                style = TextStyle(
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp
+                )
+            )
+        },
+        actions = {
+
+        }
+    )
 }

@@ -16,7 +16,11 @@ class SongRepository @Inject constructor(
 
     fun getAllSongs(): Flow<List<Song>> = songDao.getSongs()
 
+    fun getAllSongCount() : Flow<Int> = songDao.getSongsCount()
+
     fun getSongById(songId: Long): Song = songDao.getSongById(songId)
+
+    fun updateSong(song: Song) = songDao.update(song)
 
     fun deleteSong(song: Song) = songDao.delete(song)
 

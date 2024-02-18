@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 
 @Module
 @InstallIn(SingletonComponent::class)
-class AppModule {
+class CoroutineModule {
     @Provides
     fun provideMainDispatcher() = Dispatchers.Main
 

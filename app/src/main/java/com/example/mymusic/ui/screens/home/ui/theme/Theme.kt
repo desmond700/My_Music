@@ -1,4 +1,4 @@
-package com.example.mymusic.ui.ui.theme
+package com.example.mymusic.ui.screens.home.ui.theme
 
 import android.app.Activity
 import android.os.Build

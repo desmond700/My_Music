@@ -35,28 +35,33 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import com.example.mymusic.R
+import com.example.mymusic.data.room.relationship.ArtistWithSongs
 import com.example.mymusic.ui.components.MusicArt
 import com.example.mymusic.ui.components.MusicListItem
-import com.example.mymusic.ui.viewmodels.HomeViewModel
+import com.example.mymusic.ui.viewmodels.ArtistDetailsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ArtistSongsScreen(
-    artistId: String = "",
-    homeViewModel: HomeViewModel = hiltViewModel(),
+    navController: NavHostController,
+    artistData: ArtistWithSongs,
+    viewModel: ArtistDetailsViewModel = hiltViewModel(),
     onNavigation: () -> Unit
 ) {
 
 //    val context = LocalContext.current
 //    val motionScene =
 
-    val uiState by homeViewModel.uiState
-    val artist = uiState.getArtist(artistId)
+    val artistWithSongs by viewModel.artistWithSongs.collectAsStateWithLifecycle()
+
+    val artist = artistWithSongs.artist
+    val songs = artistWithSongs.songs
 
     // A surface container using the 'background' color from the theme
     Scaffold(
@@ -65,7 +70,7 @@ fun ArtistSongsScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onNavigation) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             tint = Color.White,
@@ -195,8 +200,13 @@ fun ArtistSongsScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                items(artist.songs){ audio ->
-                    MusicListItem(audio, click = {})
+                items(songs){ audio ->
+                    MusicListItem(
+                        audio,
+                        click = {},
+                        onAddToPlaylist = {},
+                        onAddToFavourites = {}
+                    )
                 }
             }
         }
@@ -204,8 +214,8 @@ fun ArtistSongsScreen(
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun ArtistSongsScreenPreview() {
-    ArtistSongsScreen(onNavigation = {})
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun ArtistSongsScreenPreview() {
+//    ArtistSongsScreen(onNavigation = {})
+//}

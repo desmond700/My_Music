@@ -1,28 +1,25 @@
 package com.example.mymusic.ui.screens.settings
 
+import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -31,17 +28,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.toColorInt
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.mymusic.ui.components.BaseListRowItem
 import com.example.mymusic.ui.components.ListHeader
+import com.example.mymusic.ui.viewmodels.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(modifier: Modifier = Modifier) {
+fun SettingsScreen(
+    modifier: Modifier = Modifier,
+    settingsViewModel: SettingsViewModel = hiltViewModel()
+) {
+
+    val settingsState by settingsViewModel.settingsState.collectAsStateWithLifecycle()
 
     // A surface container using the 'background' color from the theme
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
+//        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -63,6 +68,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 .fillMaxSize(),
             contentPadding = PaddingValues(0.dp)
         ) {
+//            stickyHeader {  }
             item {
                 ListHeader(
                     modifier = Modifier.padding(start = 1.dp),
@@ -70,28 +76,23 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             }
             item {
                 ListItemContainer {
-                    Array(5) {
-                        ListItem(click = {})
-                    }
+                    ListItem(
+                        title = "Dark mode",
+                        value = settingsState.darkMode,
+                        onValueChanged = { value ->
+                            settingsViewModel.setDarkMode(value)
+                        }
+                    )
+
+                    ListItem(
+                        title = "Play immediately",
+                        value = settingsState.playImmediately,
+                        onValueChanged = { value ->
+                            settingsViewModel.playSongImmediately(value)
+                        }
+                    )
+
                 }
-            }
-            item {
-                Spacer(modifier = Modifier.height(15.dp))
-            }
-            item {
-                ListHeader(
-                    modifier = Modifier.padding(start = 1.dp),
-                )
-            }
-            item {
-                ListItemContainer {
-                    Array(5) {
-                        ListItem(click = {})
-                    }
-                }
-            }
-            item {
-                Spacer(modifier = Modifier.height(80.dp))
             }
         }
     }
@@ -100,56 +101,57 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ListItemContainer(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+fun ListItemContainer(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .padding(horizontal = 12.dp)
             .shadow(
                 elevation = 1.dp,
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(8.dp),
                 clip = true
             )
-            .background(Color("#45475E".toColorInt()))
+            .background(Color.DarkGray)
     ) {
-        Column(
-            modifier = modifier
-                .padding(vertical = 15.dp)
-        ) {
+        Column {
             content()
         }
     }
 }
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
-fun ListItem(click: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .height(50.dp)
-            .fillMaxWidth()
-            .clickable { click() },
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-//        Icon(
-//            modifier = Modifier.size(24.dp),
-//            imageVector = Icons.Outlined.FavoriteBorder,
-//            tint = Color.Black,
-//            contentDescription = null
-//        )
-        Spacer(modifier = Modifier.width(28.dp))
-        Text(
-            text = "Tracks",
-            style = TextStyle(
-                color = Color.Black,
-                fontSize = 20.sp,
+fun ListItem(
+    title: String,
+    value: Boolean,
+    onValueChanged: (Boolean) -> Unit
+) {
+    var checked by remember { mutableStateOf(value) }
+
+    BaseListRowItem(
+        horizontalSpacing = 5.dp,
+        onTap = {
+            checked = checked.not()
+            onValueChanged(checked)
+        },
+        title = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge
             )
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        Switch(
-            checked = true,
-            onCheckedChange = {}
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-    }
+        },
+        trailing = {
+            SettingsSwitch(
+                checked = value,
+                onCheckedChange = {
+                    checked = it
+                    onValueChanged(it)
+                }
+            )
+        }
+    )
 }
 
 @Preview(showBackground = true)

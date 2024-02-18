@@ -40,19 +40,20 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.MotionLayout
 import androidx.constraintlayout.compose.MotionScene
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import com.example.mymusic.R
 import com.example.mymusic.model.AudioItem
 import com.example.mymusic.ui.components.MusicArt
 import com.example.mymusic.ui.components.MusicListItem
-import com.example.mymusic.ui.viewmodels.HomeViewModel
+import com.example.mymusic.ui.viewmodels.AlbumDetailsViewModel
 import com.example.mymusic.utils.ToolbarExitUntilCollapsedState
+import com.example.mymusic.utils.toImageBitmap
 
 val MinToolbarHeight = 120.dp
 val MaxToolbarHeight = 410.dp
@@ -67,9 +68,8 @@ private val musicDummy = AudioItem(
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun AlbumSongsScreen(
-    albumId: String = "",
-    homeViewModel: HomeViewModel = hiltViewModel(),
-    onNavigation: () -> Unit
+    navController: NavHostController,
+    viewModel: AlbumDetailsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
@@ -79,7 +79,7 @@ fun AlbumSongsScreen(
             .readBytes()
             .decodeToString()
     }
-    Log.d("AlbumSongsScreen", "albumId $albumId")
+//    Log.d("AlbumSongsScreen", "albumId $albumId")
 
 //    var sliderPosition by remember { mutableFloatStateOf(0f) }
     val toolbarHeightRange = with(density) {
@@ -94,8 +94,13 @@ fun AlbumSongsScreen(
     Log.d("AlbumSongsScreen", "scrollState.value ${scrollState.value}")
     Log.d("AlbumSongsScreen", "toolbarState.progress ${toolbarState.progress}")
 
-    val uiState by homeViewModel.uiState
-    val album = uiState.getAlbum(albumId)
+    val albumWithSongs by viewModel.albumWithSongs.collectAsStateWithLifecycle()
+
+    val album = albumWithSongs.album
+    val songs = albumWithSongs.songs
+
+//    val album = albumData.album
+//    val songs = albumData.songs
 
     // A surface container using the 'background' color from the theme
     Scaffold(
@@ -104,7 +109,7 @@ fun AlbumSongsScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onNavigation) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             tint = Color.White,
@@ -146,7 +151,7 @@ fun AlbumSongsScreen(
                         .fillMaxWidth(.6f)
                         .aspectRatio(1f)
                         .layoutId("music_art"),
-                    bitmap = album.albumArt
+                    bitmap = album.albumArt?.toImageBitmap()
                 )
                 Column(
                     modifier = Modifier
@@ -155,7 +160,7 @@ fun AlbumSongsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = album.name,
+                        text = album.albumName,
                         style = TextStyle(
                             color = Color.Black,
                             fontSize = 25.sp,
@@ -164,7 +169,7 @@ fun AlbumSongsScreen(
                     )
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(
-                        text = album.artist,
+                        text = album.albumArtist,
                         style = TextStyle(
                             color = Color.Black,
                             fontSize = 15.sp,
@@ -270,8 +275,13 @@ fun AlbumSongsScreen(
 //                        }
                         .layoutId("content_list_container"),
                 ) {
-                    album.songs.forEach { song ->
-                        MusicListItem(song, click = {})
+                    songs.forEach { song ->
+                        MusicListItem(
+                            song,
+                            click = {},
+                            onAddToPlaylist = {},
+                            onAddToFavourites = {}
+                        )
                     }
                 }
             }
@@ -287,13 +297,13 @@ fun AlbumSongsScreen(
 
 }
 
-@Preview(
-    showBackground = false,
-    showSystemUi = true,
-    device = Devices.PIXEL_7
-)
-@Composable
-fun AlbumSongsScreenPreview() {
-    AlbumSongsScreen(onNavigation = {  })
-
-}
+//@Preview(
+//    showBackground = false,
+//    showSystemUi = true,
+//    device = Devices.PIXEL_7
+//)
+//@Composable
+//fun AlbumSongsScreenPreview() {
+//    AlbumSongsScreen(onNavigation = {  })
+//
+//}

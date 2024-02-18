@@ -11,14 +11,11 @@ import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import com.example.mymusic.data.room.dao.AlbumDao
 import com.example.mymusic.data.room.dao.ArtistDao
-import com.example.mymusic.data.room.dao.FavouriteMusicDao
 import com.example.mymusic.data.room.dao.MusicPlayedAmountDao
 import com.example.mymusic.data.room.dao.PlaylistDao
 import com.example.mymusic.data.room.dao.SongDao
 import com.example.mymusic.data.room.entities.Album
-import com.example.mymusic.data.room.entities.AlbumSongCrossRef
 import com.example.mymusic.data.room.entities.Artist
-import com.example.mymusic.data.room.entities.Favourite
 import com.example.mymusic.data.room.entities.MusicPlayedAmount
 import com.example.mymusic.data.room.entities.Playlist
 import com.example.mymusic.data.room.entities.PlaylistSongCrossRef
@@ -29,11 +26,9 @@ import com.example.mymusic.utils.DATABASE_NAME
     entities = [
         Song::class,
         Album::class,
+        Artist::class,
         Playlist::class,
         PlaylistSongCrossRef::class,
-        AlbumSongCrossRef::class,
-        Favourite::class,
-        Artist::class,
         MusicPlayedAmount::class
    ],
     version = 1,
@@ -41,8 +36,6 @@ import com.example.mymusic.utils.DATABASE_NAME
 )
 @TypeConverters(DateTimeTypeConverters::class)
 abstract class MusicDatabase : RoomDatabase() {
-
-    abstract fun favourites(): FavouriteMusicDao
 
     abstract fun artists(): ArtistDao
 
